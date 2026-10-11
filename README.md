@@ -43,6 +43,84 @@ Please cite the following papers if you use OPUS-MT software and models:
  }
  ```
 
+## Batch translation API
+
+This fork keeps the original Opus-MT server and adds a batch HTTP API in front of it.
+
+* Marian is not started when the process boots. The model for a language pair loads on the first translation request for that pair.
+* `POST /translate` accepts `texts`, `src_lang`, and `trg_lang`, sends those texts to Opus in batches, and returns one translation per input, in the same order.
+* `GET /models` lists every configured pair, whether it is loaded, and how much RAM that model is using (`memory_bytes` and `memory_mb`). Unloaded models report `null`.
+* `services.json` is set up for `en-es`, `en-fi`, `en-ar`, and `ar-en`. English to Arabic sends the `>>ara<<` token so the multilingual model translates into Modern Standard Arabic.
+* If `models/<pair>/ct2` exists and CTranslate2 is installed, that model is used. Otherwise the server starts `marian-server` as before.
+
+### Run with Docker
+
+From the repository root, with the model directories mounted from `./models`:
+
+```bash
+docker-compose up --build
+```
+
+* Opus UI and the original API: http://localhost:8888
+* Batch API: http://localhost:8000
+
+Translate:
+
+```bash
+curl -X POST http://localhost:8000/translate \
+  -H 'Content-Type: application/json' \
+  -d '{"texts":["Hello","How are you?"],"src_lang":"en","trg_lang":"ar"}'
+```
+
+Loaded models:
+
+```bash
+curl http://localhost:8000/models
+```
+
+The first request for a language pair waits while that model loads. Later requests reuse it. `OPUS_BATCH_SIZE` (default 64) is how many texts are sent to Opus in one call.
+
+### Run without Docker
+
+Install the API and the Opus server dependencies, then download the four models into `models/en-es`, `models/en-fi`, `models/en-ar`, and `models/ar-en`:
+
+* https://object.pouta.csc.fi/OPUS-MT-models/en-es/opus-2019-12-04.zip
+* https://object.pouta.csc.fi/OPUS-MT-models/en-fi/opus+bt-2020-02-26.zip
+* https://object.pouta.csc.fi/Tatoeba-MT-models/eng-ara/opus+bt-2021-04-13.zip
+* https://object.pouta.csc.fi/OPUS-MT-models/ar-en/opus-2019-12-18.zip
+
+Convert each unpacked directory with CTranslate2. Use full precision for English–Spanish. Quantized weights are fine for the other three:
+
+```bash
+pip install ctranslate2 sentencepiece tornado websocket-client mosestokenizer
+ct2-opus-mt-converter --model_dir models/en-es --output_dir models/en-es/ct2 --quantization float32
+ct2-opus-mt-converter --model_dir models/en-fi --output_dir models/en-fi/ct2 --quantization int8_float32
+ct2-opus-mt-converter --model_dir models/en-ar --output_dir models/en-ar/ct2 --quantization int8_float32
+ct2-opus-mt-converter --model_dir models/ar-en --output_dir models/ar-en/ct2 --quantization int8_float32
+
+python server.py -c services.json -p 8888
+```
+
+In another shell:
+
+```bash
+pip install -r api/requirements.txt
+OPUS_URL=http://127.0.0.1:8888 uvicorn main:app --app-dir api --host 0.0.0.0 --port 8000
+```
+
+Interactive docs are at http://localhost:8000/docs.
+
+### Load test
+
+```bash
+pip install -r loadtest/requirements.txt
+locust -f loadtest/locustfile.py --host http://127.0.0.1:8000 --web-port 8090 \
+  --src-lang en --trg-lang ar --batch-size 40 \
+  --users 20 --spawn-rate 2 --num-requests 0 --autostart
+```
+
+`--batch-size` is how many texts go in each request. `--users` is how many Locust users run at once. `--spawn-rate` is how many of those users start per second. `--num-requests` stops the run after that many calls; `0` keeps going. The Locust UI is on port 8090.
+
 ## Installation of the Tornado-based Web-App
 
 Download the latest version from github:

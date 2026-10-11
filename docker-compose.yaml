@@ -5,6 +5,18 @@ services:
     build: .
     volumes:
       - ./models:/usr/src/app/models
+      - ./services.json:/usr/src/app/services.json
     ports:
       - 8888:80
+
+  opus-api:
+    build: ./api
+    ports:
+      - 8000:8000
+    environment:
+      OPUS_URL: http://opus-mt:80
+      OPUS_BATCH_SIZE: "64"
+      OPUS_TIMEOUT: "360"
+    depends_on:
+      - opus-mt
 

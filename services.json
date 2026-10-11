@@ -3,6 +3,7 @@
         "es": {
             "configuration": "./models/en-es/decoder.yml",
             "sourcebpe": "./models/en-es/source.bpe",
+            "targetbpe": "./models/en-es/target.bpe",
             "host": "localhost",
             "port": "10001"
         },
@@ -12,6 +13,23 @@
             "targetspm": "./models/en-fi/target.spm",
             "host": "localhost",
             "port": "10002"
+        },
+        "ar": {
+            "configuration": "./models/en-ar/decoder.yml",
+            "sourcespm": "./models/en-ar/source.spm",
+            "targetspm": "./models/en-ar/target.spm",
+            "preamble": ">>ara<< ",
+            "host": "localhost",
+            "port": "10003"
+        }
+    },
+    "ar": {
+        "en": {
+            "configuration": "./models/ar-en/decoder.yml",
+            "sourcespm": "./models/ar-en/source.spm",
+            "targetspm": "./models/ar-en/target.spm",
+            "host": "localhost",
+            "port": "10004"
         }
     }
 }
