@@ -6,6 +6,7 @@ services:
     volumes:
       - ./models:/usr/src/app/models
       - ./services.json:/usr/src/app/services.json
+      - ./server.py:/usr/src/app/server.py
     ports:
       - 8888:80
 

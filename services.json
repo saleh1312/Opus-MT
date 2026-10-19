@@ -15,7 +15,38 @@
             "port": "10002"
         }
     },
+    "en": {
+        "ar": {
+            "configuration": "./models/en-ar/decoder.yml",
+            "sourcespm": "./models/en-ar/source.spm",
+            "targetspm": "./models/en-ar/target.spm",
+            "preamble": ">>ara<< ",
+            "host": "localhost",
+            "port": "10005"
+        },
+        "fr": {
+            "configuration": "./models/en-fr/decoder.yml",
+            "sourcespm": "./models/en-fr/source.spm",
+            "targetspm": "./models/en-fr/target.spm",
+            "host": "localhost",
+            "port": "10006"
+        },
+        "es": {
+            "configuration": "./models/en-es/decoder.yml",
+            "sourcebpe": "./models/en-es/source.bpe",
+            "targetbpe": "./models/en-es/target.bpe",
+            "host": "localhost",
+            "port": "10008"
+        }
+    },
     "fr": {
+        "en": {
+            "configuration": "./models/fr-en/decoder.yml",
+            "sourcespm": "./models/fr-en/source.spm",
+            "targetspm": "./models/fr-en/target.spm",
+            "host": "localhost",
+            "port": "10007"
+        },
         "es": {
             "configuration": "./models/fr-es/decoder.yml",
             "sourcespm": "./models/fr-es/source.spm",
@@ -25,6 +56,13 @@
         }
     },
     "es": {
+        "en": {
+            "configuration": "./models/es-en/decoder.yml",
+            "sourcebpe": "./models/es-en/source.bpe",
+            "targetbpe": "./models/es-en/target.bpe",
+            "host": "localhost",
+            "port": "10009"
+        },
         "fr": {
             "configuration": "./models/es-fr/decoder.yml",
             "sourcespm": "./models/es-fr/source.spm",

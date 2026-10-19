@@ -353,12 +353,10 @@ def initialize_workers(config):
                     pair_config['host'], pair_config['port'], pair_config['configuration'])
             worker_pool[lang_pair] = TranslatorInterface(
                 source_lang, target_lang, pair_config, models[pair_config['configuration']])
-            # Multi-target models have to be told which language to translate to.
-            # A config preamble overrides that (for example >>ara<< on en-ar).
+            # Only multilingual models need a target-language token.
+            # Dedicated pairs must not get one just because another pair shares the source.
             if pair_config.get('preamble'):
                 worker_pool[lang_pair].preamble = pair_config['preamble']
-            elif len(targetLangs) > 1:
-                worker_pool[lang_pair].preamble = ">>{}<< ".format(target_lang)
 
     return worker_pool
 
