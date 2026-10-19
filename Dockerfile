@@ -2,30 +2,38 @@
 # image to build Marian and the required Python modules, then copy the built
 # artifacts into a much smaller final image.
 
-FROM debian:buster as builder
+FROM debian:buster AS builder
 
 WORKDIR /usr/src/app
 
-# Install base packages
+# Buster is archived. The live Debian mirrors no longer publish a Release file,
+# and buster-backports (which provided libprotobuf23) is gone.
 RUN set -eux; \
-    sh -c 'echo deb http://deb.debian.org/debian buster-backports main > /etc/apt/sources.list.d/buster-backports.list'; \
+    printf '%s\n' \
+        'deb http://archive.debian.org/debian buster main' \
+        'deb http://archive.debian.org/debian-security buster/updates main' \
+        > /etc/apt/sources.list; \
+    printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid-until; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		ca-certificates git wget gnupg build-essential lsb-release g++ \
 		automake autogen libtool cmake-data cmake unzip \
 		libboost-all-dev libblas-dev libopenblas-dev libz-dev libssl-dev \
-		libprotobuf23 protobuf-compiler libprotobuf-dev \
+		libprotobuf17 protobuf-compiler libprotobuf-dev \
 		python3-dev python3-pip python3-setuptools python3-websocket python3-venv;
 
-# Install Intel libraries
+# Buster's CA bundle cannot verify the current Intel apt certificate, and the
+# 2019 key no longer signs that repository.
 RUN set -eux; \
-	wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB; \
-	apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB; \
+	wget --no-check-certificate -O /usr/local/share/ca-certificates/cacert.crt https://curl.se/ca/cacert.pem; \
+	update-ca-certificates; \
+	wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB; \
+	apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB; \
 	sh -c 'echo deb https://apt.repos.intel.com/mkl all main > /etc/apt/sources.list.d/intel-mkl.list';\
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
 		intel-mkl-64bit-2019.5-075; \
-	rm -f GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB;
+	rm -f GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB;
 
 
 # Build Marian, using static libraries so we can simply pluck the compiled
@@ -62,6 +70,11 @@ COPY --from=builder /usr/src/app/venv /usr/src/app/venv/
 # in a different place in the "python" base image compared to where apt
 # installs it in debian:stable
 RUN set -ex ; \
+    printf '%s\n' \
+        'deb http://archive.debian.org/debian buster main' \
+        'deb http://archive.debian.org/debian-security buster/updates main' \
+        > /etc/apt/sources.list; \
+    printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid-until; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends perl ; \
         rm -rf /var/lib/apt/lists/* ; \
