@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   opus-mt:
     build: .
@@ -9,6 +7,12 @@ services:
       - ./server.py:/usr/src/app/server.py
     ports:
       - 8888:80
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1/api/languages', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
 
   opus-api:
     build: ./api
@@ -19,5 +23,6 @@ services:
       OPUS_BATCH_SIZE: "64"
       OPUS_TIMEOUT: "360"
     depends_on:
-      - opus-mt
+      opus-mt:
+        condition: service_healthy
 

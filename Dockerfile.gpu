@@ -74,14 +74,19 @@ RUN ldconfig
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -yq \
-		python3-pip;
+		python3-pip \
+		curl \
+		ca-certificates \
+		unzip; \
+	rm -rf /var/lib/apt/lists/*
 
 COPY . .
 
 RUN set -ex ; \
-	ln -sf /usr/bin/python3 /usr/src/app/venv/bin/python3
+	ln -sf /usr/bin/python3 /usr/src/app/venv/bin/python3; \
+	chmod +x /usr/src/app/fetch_models.sh /usr/src/app/docker-entrypoint.sh
 
 EXPOSE 80
 
-# Run using the virtual environment Python
+ENTRYPOINT ["/usr/src/app/docker-entrypoint.sh"]
 CMD ["venv/bin/python3", "server.py", "-c", "services.json", "-p", "80"]

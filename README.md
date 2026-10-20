@@ -50,16 +50,18 @@ This fork keeps the original Opus-MT server and adds a batch HTTP API in front o
 * Marian is not started when the process boots. The model for a language pair loads on the first translation request for that pair.
 * `POST /translate` accepts `texts`, `src_lang`, and `trg_lang`, sends those texts to Opus in batches, and returns one translation per input, in the same order.
 * `GET /models` lists every configured pair, whether it is loaded, and how much RAM that model is using (`memory_bytes` and `memory_mb`). Unloaded models report `null`.
-* `services.json` is set up for `en-es`, `en-fi`, `en-ar`, and `ar-en`. English to Arabic sends the `>>ara<<` token so the multilingual model translates into Modern Standard Arabic.
+* `services.json` configures Arabic, English, French, and Spanish in both directions. English to Arabic sends the `>>ara<<` token so the multilingual model translates into Modern Standard Arabic.
 * If `models/<pair>/ct2` exists and CTranslate2 is installed, that model is used. Otherwise the server starts `marian-server` as before.
 
 ### Run with Docker
 
-From the repository root, with the model directories mounted from `./models`:
+From the repository root:
 
 ```bash
 docker-compose up --build
 ```
+
+The Opus container checks `services.json` on startup and downloads any missing model into `./models` before the server starts. The first start needs network access. Later starts reuse the files already in that directory.
 
 * Opus UI and the original API: http://localhost:8888
 * Batch API: http://localhost:8000

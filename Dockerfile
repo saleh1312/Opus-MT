@@ -76,13 +76,15 @@ RUN set -ex ; \
         > /etc/apt/sources.list; \
     printf 'Acquire::Check-Valid-Until "false";\n' > /etc/apt/apt.conf.d/99no-check-valid-until; \
 	apt-get update; \
-	apt-get install -y --no-install-recommends perl ; \
+	apt-get install -y --no-install-recommends perl curl ca-certificates unzip ; \
         rm -rf /var/lib/apt/lists/* ; \
         ln -sf /usr/local/bin/python3 /usr/src/app/venv/bin/python3
 
 COPY . .
+RUN chmod +x /usr/src/app/fetch_models.sh /usr/src/app/docker-entrypoint.sh
 
 EXPOSE 80
 
-# Run using the virtual environment Python
+# Download any models missing from the mounted ./models directory, then start the server.
+ENTRYPOINT ["/usr/src/app/docker-entrypoint.sh"]
 CMD ["venv/bin/python3", "server.py", "-c", "services.json", "-p", "80"]
